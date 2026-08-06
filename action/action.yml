@@ -1,0 +1,20 @@
+name: 'Git-Scope Security Interceptor'
+description: 'AST-based taint analysis and secret leak interception for GitHub workflows.'
+inputs:
+  fail-on-violation:
+    description: 'Fail the workflow if vulnerabilities are found'
+    required: false
+    default: 'true'
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    - name: Install Dependencies
+      run: pip install libcst click
+      shell: bash
+    - name: Run AST Taint Scan
+      run: python3 ${{ github.action_path }}/../cli/scanner.py ./
+      shell: bash
