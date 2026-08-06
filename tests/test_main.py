@@ -26,3 +26,15 @@ def test_cli_install(tmp_path, monkeypatch):
     assert result.exit_code == 0
     assert "successfully installed" in result.output
     assert (git_dir / "pre-push").exists()
+
+def test_cli_scan_clean(monkeypatch):
+    runner = CliRunner()
+    # Mock subprocess.run to simulate git diff returning no staged python files
+    class MockResult:
+        stdout = ""
+        returncode = 0
+
+    monkeypatch.setattr("subprocess.run", lambda *args, **kwargs: MockResult())
+    result = runner.invoke(main.cli, ["scan"])
+    assert result.exit_code == 0
+    assert "All files passed AST security checks" in result.output
