@@ -1,14 +1,19 @@
-FROM python:3.12-slim
+# Use a lightweight Python base image
+FROM python:3.11-slim
 
-RUN apt-get update && apt-get install -y --no-install-recommends git && rm -rf /var/lib/apt/lists/*
-
+# Set the working directory inside the container
 WORKDIR /app
 
-COPY . /app
+# Install system dependencies if required
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN pip install --no-cache-dir pytest pytest-cov click
+# Copy project requirements or files
+COPY . /app/
 
-RUN python3 cli/main.py install
+# Expose any necessary application ports (change if needed, e.g., 80, 5000)
+EXPOSE 8080
 
-ENTRYPOINT ["python3", "cli/main.py"]
-CMD ["scan"]
+# Default command to run your application
+CMD ["python3", "-m", "http.server", "8080"]
