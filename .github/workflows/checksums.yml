@@ -1,1 +1,79 @@
-(paste the checksums.yml content from my previous message here)
+name: Release Checksums
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g., v1.0.0)'
+        required: true
+        default: 'v1.0.0'
+  release:
+    types: [published]
+
+jobs:
+  compute-and-upload:
+    name: Compute checksums and upload to release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Compute checksums and upload
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          INPUT_TAG: ${{ github.event.inputs.tag }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          set -euo pipefail
+          # choose tag: input (workflow_dispatch) takes precedence over release tag
+          TAG="$INPUT_TAG"
+          if [ -z "$TAG" ] && [ -n "$RELEASE_TAG" ]; then
+            TAG="$RELEASE_TAG"
+          fi
+          if [ -z "$TAG" ]; then
+            echo "No tag specified via workflow input or release event"
+            exit 1
+          fi
+          echo "Using tag: $TAG"
+
+          api="https://api.github.com/repos/$REPO"
+          # fetch release by tag
+          release_json=$(curl -s -H "Authorization: token $GITHUB_TOKEN" "$api/releases/tags/$TAG")
+          release_id=$(echo "$release_json" | jq -r .id)
+          if [ "$release_id" = "null" ] || [ -z "$release_id" ]; then
+            echo "Release $TAG not found"
+            echo "$release_json"
+            exit 1
+          fi
+
+          echo "Release id: $release_id"
+          rm -f checksums.txt
+
+          asset_count=$(echo "$release_json" | jq '.assets | length')
+          if [ "$asset_count" -eq 0 ]; then
+            echo "No assets found for release $TAG"
+            exit 0
+          fi
+
+          for i in $(seq 0 $((asset_count - 1))); do
+            name=$(echo "$release_json" | jq -r ".assets[$i].name")
+            asset_id=$(echo "$release_json" | jq -r ".assets[$i].id")
+            echo "Downloading $name (id $asset_id)..."
+            curl -sL -H "Authorization: token $GITHUB_TOKEN" -H "Accept: application/octet-stream" "$api/releases/assets/$asset_id" -o "$name"
+            sha256sum "$name" | awk '{print $1 "  " $2}' >> checksums.txt
+          done
+
+          echo "Checksums:\n"
+          cat checksums.txt
+
+          echo "Uploading checksums.txt as release asset..."
+          upload_url="https://uploads.github.com/repos/$REPO/releases/$release_id/assets?name=checksums.txt"
+          curl -s -X POST -H "Authorization: token $GITHUB_TOKEN" -H "Content-Type: text/plain" --data-binary @checksums.txt "$upload_url"
+          echo "Done."
