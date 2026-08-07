@@ -1,3 +1,3 @@
 module github.com/ehtishamiqbal433-cell/Git-Scope
 
-go 1.26.1
+go 1.22
