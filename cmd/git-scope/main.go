@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ehtishamiqbal433-cell/infra-scope/internal/tui"
+	"github.com/ehtishamiqbal433-cell/Git-Scope/internal/tui"
 )
 
 var version = "v1.0.0"
