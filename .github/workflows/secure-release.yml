@@ -7,7 +7,6 @@ on:
 
 permissions:
   contents: write
-  id-token: write
 
 jobs:
   build-and-release:
@@ -33,11 +32,6 @@ jobs:
           cd release-binaries
           sha256sum * > checksums.txt
           mv checksums.txt ../checksums.txt
-
-      - name: Generate Artifact Attestation
-        uses: actions/attest-build-provenance@v2
-        with:
-          subject-path: 'release-binaries/*'
 
       - name: Create GitHub Release and Upload Assets
         uses: softprops/action-gh-release@v2
