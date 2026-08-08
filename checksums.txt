@@ -1,0 +1,5 @@
+d6d676733dc05ac975299e8ccc49be9a27dcbdda87e78b7ebaf639e1de27ab0d  git-scope-darwin-amd64
+c22aab5db1dab5fdbda055a083db88f402e5738cf91b98bdfdc312a2b826a265  git-scope-darwin-arm64
+68672fbb45ea731275d2ade522c25b46bc0bdc754281a40666fd164ac23349c8  git-scope-linux-amd64
+22f74112c982d26f2b1a2c787b1f678fb9707cebd72773aa58d29bb9983aabcd  git-scope-linux-arm64
+85fb8fb301a3fa314ce9eb777f1664432dbe953eef6dea8a015f10edca282e90  git-scope-windows-amd64.exe
